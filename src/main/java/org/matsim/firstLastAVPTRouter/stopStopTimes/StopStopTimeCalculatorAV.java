@@ -43,7 +43,7 @@ public class StopStopTimeCalculatorAV implements PersonEntersVehicleEventHandler
 
     @Inject
     public StopStopTimeCalculatorAV(TransitSchedule transitSchedule, Config config, EventsManager eventsManager) {
-        this(transitSchedule, config.travelTimeCalculator().getTraveltimeBinSize(), (int)(config.qsim().getEndTime() - config.qsim().getStartTime()));
+        this(transitSchedule, config.travelTimeCalculator().getTraveltimeBinSize(), (int)(config.qsim().getEndTime().seconds() - config.qsim().getStartTime().seconds()));
         eventsManager.addHandler(this);
     }
 
