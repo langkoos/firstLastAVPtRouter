@@ -50,11 +50,11 @@ public final class TransitRouterNetworkFirstLastAVPT implements Network {
 	private final Map<Id<Link>, TransitRouterNetworkLink> links = new LinkedHashMap<>();
 	private final Map<Id<Node>, TransitRouterNetworkNode> nodes = new LinkedHashMap<>();
 	private final NetworkModes networkModes;
-	protected QuadTree<TransitRouterNetworkNode> qtNodes = null;
-	protected QuadTree<TransitRouterNetworkNode> qtNodesAV = null;
+	private QuadTree<TransitRouterNetworkNode> qtNodes = null;
+	private QuadTree<TransitRouterNetworkNode> qtNodesAV = null;
 
 	private long nextNodeId = 0;
-	protected long nextLinkId = 0;
+	private long nextLinkId = 0;
 
 	public TransitRouterNetworkFirstLastAVPT(NetworkModes networkModes) {
 		this.networkModes = networkModes;
@@ -70,8 +70,8 @@ public final class TransitRouterNetworkFirstLastAVPT implements Network {
 		public final TransitRoute route;
 		public final TransitLine line;
 		final Id<Node> id;
-		final Map<Id<Link>, TransitRouterNetworkLink> ingoingLinks = new LinkedHashMap<Id<Link>, TransitRouterNetworkLink>();
-		final Map<Id<Link>, TransitRouterNetworkLink> outgoingLinks = new LinkedHashMap<Id<Link>, TransitRouterNetworkLink>();
+		final Map<Id<Link>, TransitRouterNetworkLink> ingoingLinks = new LinkedHashMap<>();
+		final Map<Id<Link>, TransitRouterNetworkLink> outgoingLinks = new LinkedHashMap<>();
 
 		public TransitRouterNetworkNode(final Id<Node> id, final TransitStopFacility stop, final TransitRoute route, final TransitLine line) {
 			this.id = id;
@@ -178,7 +178,7 @@ public final class TransitRouterNetworkFirstLastAVPT implements Network {
 
 		@Override
 		public double getCapacity() {
-			return getCapacity(Time.UNDEFINED_TIME);
+			return getCapacity(Double.NEGATIVE_INFINITY);
 		}
 
 		@Override
@@ -188,7 +188,7 @@ public final class TransitRouterNetworkFirstLastAVPT implements Network {
 
 		@Override
 		public double getFreespeed() {
-			return getFreespeed(Time.UNDEFINED_TIME);
+			return getFreespeed(Double.NEGATIVE_INFINITY);
 		}
 
 		@Override
@@ -203,7 +203,7 @@ public final class TransitRouterNetworkFirstLastAVPT implements Network {
 
 		@Override
 		public double getNumberOfLanes() {
-			return getNumberOfLanes(Time.UNDEFINED_TIME);
+			return getNumberOfLanes(Double.NEGATIVE_INFINITY);
 		}
 
 		@Override
@@ -282,12 +282,18 @@ public final class TransitRouterNetworkFirstLastAVPT implements Network {
 		}
 
 		@Override
+		public double getCapacityPeriod() {
+			// TODO Auto-generated method stub
+			throw new RuntimeException("not implemented") ;
+		}
+
+		@Override
 		public Attributes getAttributes() {
 			throw new UnsupportedOperationException();
 		}
 	}
 	public TransitRouterNetworkNode createNode(final TransitStopFacility stop, final TransitRoute route, final TransitLine line) {
-		Id<Node> id = null;
+		Id<Node> id;
 		if(line==null && route==null)
 			id = Id.createNodeId(stop.getId().toString());
 		else
@@ -338,7 +344,7 @@ public final class TransitRouterNetworkFirstLastAVPT implements Network {
 				if (c.getY() > maxY)
 					maxY = c.getY();
 			}
-		QuadTree<TransitRouterNetworkNode> quadTree = new QuadTree<TransitRouterNetworkNode>(minX, minY, maxX, maxY);
+		QuadTree<TransitRouterNetworkNode> quadTree = new QuadTree<>(minX, minY, maxX, maxY);
 		for (TransitRouterNetworkNode node : getNodes().values()) {
 			if(node.line == null && node.route == null) {
 				Coord c = node.stop.getCoord();
@@ -372,7 +378,7 @@ public final class TransitRouterNetworkFirstLastAVPT implements Network {
 		this.qtNodesAV = quadTree;
 	}
 	public enum NetworkModes {
-		PT,PT_TAXI,PT_AV,AV;
+		PT,PT_TAXI,PT_AV,AV
 	}
 	public static TransitRouterNetworkFirstLastAVPT createFromSchedule(final Network network, final TransitSchedule schedule, final double maxBeelineWalkConnectionDistance, NetworkModes networkModes) {
 		log.info("start creating transit network");
@@ -380,7 +386,7 @@ public final class TransitRouterNetworkFirstLastAVPT implements Network {
 		final Counter linkCounter = new Counter(" link #");
 		final Counter nodeCounter = new Counter(" node #");
 		int numTravelLinks = 0, numWaitingLinks = 0, numInsideLinks = 0, numWalkTransferLinks = 0, numAVTransferLinks = 0;
-		Map<Id<TransitStopFacility>, TransitRouterNetworkNode> stops = new HashMap<Id<TransitStopFacility>, TransitRouterNetworkNode>();
+		Map<Id<TransitStopFacility>, TransitRouterNetworkNode> stops = new HashMap<>();
 		TransitRouterNetworkNode nodeSR, nodeS;
 		// build stop nodes
 		for(TransitStopFacility stop:schedule.getFacilities().values()) {
@@ -401,11 +407,7 @@ public final class TransitRouterNetworkFirstLastAVPT implements Network {
 			for (TransitRouterNetworkNode node2 : transitNetwork.getNearestNodes(node.stop.getCoord(), maxBeelineWalkConnectionDistance))
 				if (!node.getCoord().equals(node2.getCoord())) {
 					Id<Node> id = Id.createNodeId(node2.stop.getId().toString() + "t");
-					Map<TransitRouterNetworkNode, TransitRouterNetworkNode> map = nodesSR.get(node);
-					if(map==null) {
-						map = new HashMap<>();
-						nodesSR.put(node,map);
-					}
+					Map<TransitRouterNetworkNode, TransitRouterNetworkNode> map = nodesSR.computeIfAbsent(node, k -> new HashMap<>());
 					map.put(node2, new TransitRouterNetworkNode(id, node2.stop, dummy, null));
 				}
 		if(networkModes == NetworkModes.PT_AV || networkModes == NetworkModes.AV) {
@@ -418,12 +420,8 @@ public final class TransitRouterNetworkFirstLastAVPT implements Network {
 						if (!node.getCoord().equals(node2.getCoord()))
 							/*if (node2.stop.getStopAreaId()!=null && node2.stop.getStopAreaId().toString().equals(DRT_STOP_AREA))*/ {
 								Id<Node> id = Id.createNodeId(node2.stop.getId().toString() + "t");
-								Map<TransitRouterNetworkNode, TransitRouterNetworkNode> map = nodesSRAV.get(node);
-								if(map==null) {
-									map = new HashMap<>();
-									nodesSRAV.put(node,map);
-								}
-								map.put(node2, new TransitRouterNetworkNode(id, node2.stop, dummy, null));
+							Map<TransitRouterNetworkNode, TransitRouterNetworkNode> map = nodesSRAV.computeIfAbsent(node, k -> new HashMap<>());
+							map.put(node2, new TransitRouterNetworkNode(id, node2.stop, dummy, null));
 							}
 			for(Map.Entry<TransitRouterNetworkNode, Map<TransitRouterNetworkNode, TransitRouterNetworkNode>> triple:nodesSRAV.entrySet())
 				for(Map.Entry<TransitRouterNetworkNode, TransitRouterNetworkNode> duple:triple.getValue().entrySet()) {

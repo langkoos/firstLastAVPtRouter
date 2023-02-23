@@ -9,7 +9,7 @@ import java.util.Set;
 
 
 public final class MainModeIdentifierFirstLastAVPT implements MainModeIdentifier {
-    private Set<String> mainModes;
+    private final Set<String> mainModes;
     public MainModeIdentifierFirstLastAVPT(Set<String> mainModes) {
         this.mainModes = mainModes;
     }

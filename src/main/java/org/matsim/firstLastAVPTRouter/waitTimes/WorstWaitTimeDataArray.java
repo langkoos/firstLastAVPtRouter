@@ -22,6 +22,8 @@ package org.matsim.firstLastAVPTRouter.waitTimes;
 
 import org.matsim.contrib.eventsBasedPTRouter.waitTimes.WaitTimeData;
 
+import java.util.Arrays;
+
 /**
  * Array implementation of the structure for saving wait times
  * 
@@ -35,7 +37,7 @@ public class WorstWaitTimeDataArray implements WaitTimeData {
 	 */
 	private static final long serialVersionUID = 1L;
 	//Attributes
-	private double[] worstWaitTimes;
+	private final double[] worstWaitTimes;
 
 	//Constructors
 	public WorstWaitTimeDataArray(int numSlots) {
@@ -46,9 +48,7 @@ public class WorstWaitTimeDataArray implements WaitTimeData {
 	//Methods
 	@Override
 	public void resetWaitTimes() {
-		for(int i = 0; i< worstWaitTimes.length; i++) {
-			worstWaitTimes[i] = 0;
-		}
+		Arrays.fill(worstWaitTimes, 0);
 	}
 	@Override
 	public synchronized void addWaitTime(int timeSlot, double waitTime) {

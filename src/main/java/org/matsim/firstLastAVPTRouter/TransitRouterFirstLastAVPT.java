@@ -1,6 +1,6 @@
 /* *********************************************************************** *
  * project: org.matsim.*
- * TranitRouterVariableImpl.java
+ * TransitRouterVariableImpl.java
  *                                                                         *
  * *********************************************************************** *
  *                                                                         *
@@ -33,16 +33,14 @@ import org.matsim.core.population.PopulationUtils;
 import org.matsim.core.population.routes.RouteUtils;
 import org.matsim.core.router.InitialNode;
 import org.matsim.core.router.RoutingModule;
-import org.matsim.core.router.StageActivityTypes;
-import org.matsim.core.router.StageActivityTypesImpl;
+import org.matsim.core.router.RoutingRequest;
 import org.matsim.core.router.util.LeastCostPathCalculator.Path;
 import org.matsim.core.router.util.PreProcessDijkstra;
 import org.matsim.core.utils.collections.QuadTree;
 import org.matsim.core.utils.geometry.CoordUtils;
 import org.matsim.facilities.Facility;
-import org.matsim.pt.PtConstants;
 import org.matsim.pt.router.MultiNodeDijkstra;
-import org.matsim.pt.routes.ExperimentalTransitRoute;
+import org.matsim.pt.routes.DefaultTransitPassengerRoute;
 import org.matsim.pt.transitSchedule.api.TransitStopArea;
 import org.matsim.pt.transitSchedule.api.TransitStopFacility;
 
@@ -52,7 +50,6 @@ public class TransitRouterFirstLastAVPT implements RoutingModule {
 
     public static final String AV_MODE = "drt";
 	private final TransitRouterNetworkFirstLastAVPT transitNetwork;
-
 	private final MultiNodeDijkstra dijkstra;
 	private final MultiDestinationDijkstra mDijkstra;
 	private final TransitRouterParams config;
@@ -77,7 +74,7 @@ public class TransitRouterFirstLastAVPT implements RoutingModule {
 		this.stopsByArea = stopsByArea;
 	}
 	
-	private Map<Node, InitialNode>[] locateWrappedNearestTransitNodes(Person person, Coord coord, Id<Link> link, double departureTime) {
+	private Map[] locateWrappedNearestTransitNodes(Person person, Coord coord, Id<Link> link, double departureTime) {
 		Collection<TransitRouterNetworkFirstLastAVPT.TransitRouterNetworkNode> nearestNodes = this.transitNetwork.getNearestNodes(coord, config.searchRadius);
 		if (nearestNodes.size() < 1) {
 			// also enlarge search area if only one stop found, maybe a second one is near the border of the search area
@@ -98,7 +95,7 @@ public class TransitRouterFirstLastAVPT implements RoutingModule {
 			double initialCost = getWalkDisutility(person, coord, toCoord);
 			wrappedNearestNodes.put(node, new InitialNode(initialCost, initialTime + departureTime));
 		}
-		Collection<TransitRouterNetworkFirstLastAVPT.TransitRouterNetworkNode> nearestNodesAV = this.transitNetwork.getNearestAVNodes(coord, config.maxBeelineAVConnectionDistance);
+		Collection<TransitRouterNetworkFirstLastAVPT.TransitRouterNetworkNode> nearestNodesAV = this.transitNetwork.getNearestAVNodes(coord, TransitRouterParams.maxBeelineAVConnectionDistance);
 		if (nearestNodesAV.size() < 1) {
 			// also enlarge search area if only one stop found, maybe a second one is near the border of the search area
 			TransitRouterNetworkFirstLastAVPT.TransitRouterNetworkNode nearestNode = this.transitNetwork.getNearestNode(coord);
@@ -129,7 +126,7 @@ public class TransitRouterFirstLastAVPT implements RoutingModule {
 			return new HashMap<>();
 	}
 
-	@Override
+
 	public List<PlanElement> calcRoute(final Facility fromFacility, final Facility toFacility, final double departureTime, final Person person) {
 		// find possible start stops
 		Map<Node, InitialNode>[] wrappedFromNodes = this.locateWrappedNearestTransitNodes(person, fromFacility.getCoord(), fromFacility.getLinkId(), departureTime);
@@ -216,16 +213,15 @@ public class TransitRouterFirstLastAVPT implements RoutingModule {
 			Coord toC = toFacility.getCoord();
 			Id<Link> fromL = fromFacility.getLinkId();
 			Id<Link> toL = toFacility.getLinkId();
-			double time = departureTime;
-			legs.addAll(convertPathToLegList(time, p, fromC, toC, person, fromL, toL));
+			legs.addAll(convertPathToLegList(departureTime, p, fromC, toC, person, fromL, toL));
 		}
 		return fillWithActivities(legs);
 	}
-
-	@Override
-	public StageActivityTypes getStageActivityTypes() {
-		return new StageActivityTypesImpl(PtConstants.TRANSIT_ACTIVITY_TYPE);
-	}
+//
+//	@Override
+//	public StageActivityTypes getStageActivityTypes() {
+//		return new StageActivityTypesImpl(PtConstants.TRANSIT_ACTIVITY_TYPE);
+//	}
 	
 	protected List<PlanElement> convertPathToLegList(double departureTime, Path p, Coord fromCoord, Coord toCoord, Person person, Id<Link> startLinkId, Id<Link> endLinkId) {
 		String mode = TransportMode.transit_walk;
@@ -250,7 +246,7 @@ public class TransitRouterFirstLastAVPT implements RoutingModule {
 				start = false;
 				mode = TransportMode.pt;
 				leg = PopulationUtils.createLeg(mode);
-				ExperimentalTransitRoute ptRoute = new ExperimentalTransitRoute(stop, l.fromNode.line, l.fromNode.route, l.fromNode.stop);
+				DefaultTransitPassengerRoute ptRoute = new DefaultTransitPassengerRoute(stop, l.fromNode.line, l.fromNode.route, l.fromNode.stop);
 				leg.setRoute(ptRoute);
 				leg.setTravelTime(travelTime);
 				legs.add(leg);
@@ -286,6 +282,7 @@ public class TransitRouterFirstLastAVPT implements RoutingModule {
 			else if(l.mode!=null) {
 				if (!mode.equals("pt") && !mode.equals(l.mode)) {
 					Id<Link> startId = start ? startLinkId : stop.getLinkId(), endId = l.fromNode.stop.getLinkId();
+					assert coord != null;
 					distance = CoordUtils.calcEuclideanDistance(coord, l.fromNode.getCoord());
 					if (distance>0 || !startLinkId.equals(l.fromNode.stop.getLinkId())) {
 						start = false;
@@ -304,13 +301,9 @@ public class TransitRouterFirstLastAVPT implements RoutingModule {
 						time += moveTime;
 						legs.add(leg);
 						coord = l.fromNode.getCoord();
-						stop = l.fromNode.stop;
-						mode = l.mode;
 					}
-					else {
-						stop = l.fromNode.stop;
-						mode = l.mode;
-					}
+					stop = l.fromNode.stop;
+					mode = l.mode;
 				}
 				if(coord==null) {
 					coord = l.fromNode.getCoord();
@@ -324,14 +317,10 @@ public class TransitRouterFirstLastAVPT implements RoutingModule {
 			if(distance>0 || !startLinkId.equals(n.stop.getLinkId())) {
 				distance = CoordUtils.calcEuclideanDistance(coord, n.getCoord());
 				leg = PopulationUtils.createLeg(mode);
-				moveTime = distance / (mode.equals(TransportMode.transit_walk) ? this.config.beelineWalkSpeed : TransitRouterParams.avSpeed);
-				if(mode.equals(TransportMode.transit_walk))
-					route = RouteUtils.createGenericRouteImpl(stop.getLinkId(), n.stop.getLinkId());
-				else {
-					route = new DrtRoute(stop.getLinkId(), n.stop.getLinkId());
-					route.setRouteDescription(600+" "+moveTime);
-					route.setTravelTime(1.5*moveTime + 600);
-				}
+				moveTime = distance / TransitRouterParams.avSpeed;
+				route = new DrtRoute(stop.getLinkId(), n.stop.getLinkId());
+				route.setRouteDescription(600+" "+moveTime);
+				route.setTravelTime(1.5*moveTime + 600);
 				route.setDistance(distance);
 				leg.setRoute(route);
 				leg.setTravelTime(moveTime);
@@ -358,9 +347,9 @@ public class TransitRouterFirstLastAVPT implements RoutingModule {
 	}
 
 	private List<PlanElement> fillWithActivities(List<PlanElement> baseTrip) {
-		List<PlanElement> trip = new ArrayList();
-		for(Iterator var10 = baseTrip.iterator(); var10.hasNext();) {
-			Leg leg = (Leg)var10.next();
+		List<PlanElement> trip = new ArrayList<>();
+		for (PlanElement planElement : baseTrip) {
+			Leg leg = (Leg) planElement;
 			trip.add(leg);
 			Activity act = PopulationUtils.createActivityFromLinkId("pt interaction", leg.getRoute().getEndLinkId());
 			act.setMaximumDuration(0.0D);
@@ -382,4 +371,8 @@ public class TransitRouterFirstLastAVPT implements RoutingModule {
 		return dijkstra;
 	}
 
+	@Override
+	public List<? extends PlanElement> calcRoute(RoutingRequest request) {
+		return null;
+	}
 }

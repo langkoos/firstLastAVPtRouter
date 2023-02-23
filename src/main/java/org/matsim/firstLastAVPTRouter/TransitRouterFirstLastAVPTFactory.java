@@ -64,6 +64,7 @@ public class TransitRouterFirstLastAVPTFactory implements Provider<TransitRouter
     public TransitRouterFirstLastAVPTFactory(final Scenario scenario, final WaitTime waitTime, final WaitTime waitTimeAV, final StopStopTime stopStopTime, final StopStopTime stopStopTimeAV, final TransitRouterNetworkFirstLastAVPT.NetworkModes networkModes) {
 		this.config = new TransitRouterParams(scenario.getConfig().transitRouter(), scenario.getConfig().plansCalcRoute());
 		routerNetwork = TransitRouterNetworkFirstLastAVPT.createFromSchedule(scenario.getNetwork(), scenario.getTransitSchedule(), this.config.maxBeelineWalkConnectionDistance, networkModes);
+//		scenario.
 		this.scenario = scenario;
 		this.waitTime = waitTime;
 		this.waitTimeAV = waitTimeAV;
@@ -74,7 +75,7 @@ public class TransitRouterFirstLastAVPTFactory implements Provider<TransitRouter
 		(new NetworkCleaner()).run(cleanNetwork);
 		this.params = new TransitRouterUtilityParams(scenario.getConfig().planCalcScore());
 		HashSet<Id<TransitStopArea>> stopAreas = new HashSet<>();
-		scenario.getTransitSchedule().getFacilities().values().stream().forEach(transitStopFacility -> stopAreas.add(transitStopFacility.getStopAreaId()));
+		scenario.getTransitSchedule().getFacilities().values().forEach(transitStopFacility -> stopAreas.add(transitStopFacility.getStopAreaId()));
 		for (Id<TransitStopArea> stopArea: stopAreas) {
 			Set<TransitRouterNetworkFirstLastAVPT.TransitRouterNetworkNode> nodeInArea = this.routerNetwork.getNodes().values().stream().filter(node -> (node.stop.getStopAreaId() == stopArea)).collect(Collectors.toSet());
 			double minX = Double.POSITIVE_INFINITY;
