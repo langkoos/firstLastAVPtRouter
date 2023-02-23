@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE network SYSTEM "http://www.matsim.org/files/dtd/network_v2.dtd">
+<network>
+
+<!-- ====================================================================== -->
+
+	<nodes>
+		<node id="CC30" x="369878.0" y="140452.0" >
+		</node>
+		<node id="CC31" x="370527.0" y="140720.0" >
+		</node>
+		<node id="CC32" x="371710.0" y="140738.0" >
+		</node>
+		<node id="NE1/CC29" x="368884.04" y="139909.175" >
+		</node>
+		<node id="NS27/CE2/TE20" x="372627.173" y="141036.882" >
+		</node>
+		<node id="rails_node_5" x="373110.9631384836" y="141766.82342864992" >
+		</node>
+		<node id="rails_node_6" x="368089.87976619805" y="140286.59693224917" >
+		</node>
+		<node id="rails_node_7" x="368002.9520253234" y="140321.67490597826" >
+		</node>
+		<node id="rails_node_8" x="373160.137815761" y="141826.68742697017" >
+		</node>
+	</nodes>
+
+<!-- ====================================================================== -->
+
+	<links capperiod="01:00:00" effectivecellsize="7.5" effectivelanewidth="3.75">
+		<link id="CC30_CC31" from="CC30" to="CC31" length="702.1573897638619" freespeed="22.22" capacity="1000.0" permlanes="4.0" oneway="1" modes="mrt" >
+		</link>
+		<link id="CC30_NE1/CC29" from="CC30" to="NE1/CC29" length="1132.5261419609944" freespeed="22.22" capacity="1000.0" permlanes="4.0" oneway="1" modes="mrt" >
+		</link>
+		<link id="CC31_CC30" from="CC31" to="CC30" length="702.1573897638619" freespeed="22.22" capacity="1000.0" permlanes="4.0" oneway="1" modes="mrt" >
+		</link>
+		<link id="CC31_CC32" from="CC31" to="CC32" length="1183.136932058162" freespeed="22.22" capacity="1000.0" permlanes="4.0" oneway="1" modes="mrt" >
+		</link>
+		<link id="CC32_CC31" from="CC32" to="CC31" length="1183.136932058162" freespeed="22.22" capacity="1000.0" permlanes="4.0" oneway="1" modes="mrt" >
+		</link>
+		<link id="CC32_NS27/CE2/TE20" from="CC32" to="NS27/CE2/TE20" length="964.6433340116051" freespeed="22.22" capacity="1000.0" permlanes="4.0" oneway="1" modes="mrt" >
+		</link>
+		<link id="NE1/CC29_CC30" from="NE1/CC29" to="CC30" length="1132.5261419609944" freespeed="22.22" capacity="1000.0" permlanes="4.0" oneway="1" modes="mrt" >
+		</link>
+		<link id="NS27/CE2/TE20_CC32" from="NS27/CE2/TE20" to="CC32" length="964.6433340116051" freespeed="22.22" capacity="1000.0" permlanes="4.0" oneway="1" modes="mrt" >
+		</link>
+		<link id="rails_link_10" from="rails_node_6" to="NE1/CC29" length="879.0" freespeed="22.0" capacity="1000.0" permlanes="4.0" oneway="1" modes="mrt" >
+		</link>
+		<link id="rails_link_10_o" from="NE1/CC29" to="rails_node_6" length="879.0" freespeed="22.0" capacity="1000.0" permlanes="4.0" oneway="1" modes="mrt" >
+		</link>
+		<link id="rails_link_12" from="rails_node_8" to="rails_node_5" length="77.0" freespeed="22.0" capacity="1000.0" permlanes="4.0" oneway="1" modes="mrt" >
+		</link>
+		<link id="rails_link_12_o" from="rails_node_5" to="rails_node_8" length="77.0" freespeed="22.0" capacity="1000.0" permlanes="4.0" oneway="1" modes="mrt" >
+		</link>
+		<link id="rails_link_14" from="rails_node_7" to="rails_node_6" length="93.0" freespeed="22.0" capacity="1000.0" permlanes="4.0" oneway="1" modes="mrt" >
+		</link>
+		<link id="rails_link_14_o" from="rails_node_6" to="rails_node_7" length="93.0" freespeed="22.0" capacity="1000.0" permlanes="4.0" oneway="1" modes="mrt" >
+		</link>
+		<link id="rails_link_8" from="NS27/CE2/TE20" to="rails_node_5" length="875.0" freespeed="22.0" capacity="1000.0" permlanes="4.0" oneway="1" modes="mrt" >
+		</link>
+		<link id="rails_link_9" from="rails_node_5" to="NS27/CE2/TE20" length="875.0" freespeed="22.0" capacity="1000.0" permlanes="4.0" oneway="1" modes="mrt" >
+		</link>
+	</links>
+
+<!-- ====================================================================== -->
+
+</network>
