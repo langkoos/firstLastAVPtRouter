@@ -9,15 +9,12 @@ import java.util.Set;
 
 
 public final class MainModeIdentifierFirstLastAVPT implements MainModeIdentifier {
-    private Set<String> mainModes;
+    private final Set<String> mainModes;
     public MainModeIdentifierFirstLastAVPT(Set<String> mainModes) {
         this.mainModes = mainModes;
     }
 
     public String identifyMainMode(List<? extends PlanElement> tripElements) {
-        for(PlanElement planElement:tripElements)
-            if(planElement instanceof Leg && mainModes.contains(((Leg)planElement).getMode()))
-                return ((Leg)planElement).getMode();
-        return "pt";
+        return tripElements.stream().filter(planElement -> planElement instanceof Leg && mainModes.contains(((Leg) planElement).getMode())).findFirst().map(planElement -> ((Leg) planElement).getMode()).orElse("pt");
     }
 }

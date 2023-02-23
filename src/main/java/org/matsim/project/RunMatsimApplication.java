@@ -21,23 +21,25 @@ package org.matsim.project;
 import org.apache.logging.log4j.core.tools.picocli.CommandLine;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.application.MATSimApplication;
+import org.matsim.contrib.drt.run.MultiModeDrtConfigGroup;
 import org.matsim.core.config.Config;
+import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.controler.Controler;
 import org.matsim.core.controler.OutputDirectoryHierarchy.OverwriteFileSetting;
+import org.matsim.vis.otfvis.OTFVisConfigGroup;
 
 /**
  * @author nagel
  *
  */
-@CommandLine.Command( header = ":: MyScenario ::", version = "1.0")
+@CommandLine.Command( header = ":: ScenarioWithMassRouter ::", version = "1.0")
 public class RunMatsimApplication extends MATSimApplication {
 
 	public RunMatsimApplication() {
 		super("scenarios/equil/config.xml");
 	}
 
-	public static void main(String[] args) {
-		MATSimApplication.run(RunMatsimApplication.class, args);
+	public static void main(String[] args) {MATSimApplication.run(RunMatsimApplication.class, args);
 	}
 
 	@Override

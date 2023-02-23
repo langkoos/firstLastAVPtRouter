@@ -39,7 +39,7 @@ public class StopStopTimeCalculatorAV implements PersonEntersVehicleEventHandler
     private final Map<Id<TransitStopFacility>, Map<Id<TransitStopFacility>, Double>> scheduledStopStopTimes;
     private final Map<Id<Vehicle>, Id<TransitStopFacility>> arrivingVehicles;
     private final Map<Id<Person>, Tuple<Id<TransitStopFacility>, Double>> inTransitPeople;
-    private double timeSlot;
+    private final double timeSlot;
 
     @Inject
     public StopStopTimeCalculatorAV(TransitSchedule transitSchedule, Config config, EventsManager eventsManager) {
@@ -48,34 +48,33 @@ public class StopStopTimeCalculatorAV implements PersonEntersVehicleEventHandler
     }
 
     public StopStopTimeCalculatorAV(TransitSchedule transitSchedule, int timeSlot, int totalTime) {
-        this.stopStopTimes = new HashMap(5000);
-        this.scheduledStopStopTimes = new HashMap(5000);
-        for(TransitStopFacility stopA : transitSchedule.getFacilities().values()) {
-            /*if(stopA.getStopAreaId()!=null && stopA.getStopAreaId().toString().equals(DRT_STOP_AREA))*/ {
-                Map<Id<TransitStopFacility>, Double> sMap = new HashMap<>();
-                scheduledStopStopTimes.put(stopA.getId(), sMap);
-                Map<Id<TransitStopFacility>, StopStopTimeData> map = new HashMap<>();
-                stopStopTimes.put(stopA.getId(), map);
-                for (TransitStopFacility stopB : transitSchedule.getFacilities().values())
-                    if(stopA != stopB /*&& stopB.getStopAreaId()!=null && stopB.getStopAreaId().toString().equals(DRT_STOP_AREA)*/) {
-                        double distance = CoordUtils.calcEuclideanDistance(stopA.getCoord(), stopB.getCoord());
-                        sMap.put(stopB.getId(), distance / (20.0 / 3.6));
-                        map.put(stopB.getId(), new StopStopTimeDataArray(totalTime / timeSlot + 1));
-                    }
-            }
-        }
+        this.stopStopTimes = new HashMap<>(5000);
+        this.scheduledStopStopTimes = new HashMap<>(5000);
+        /*if(stopA.getStopAreaId()!=null && stopA.getStopAreaId().toString().equals(DRT_STOP_AREA))*/
+        transitSchedule.getFacilities().values().forEach(stopA -> {
+            Map<Id<TransitStopFacility>, Double> sMap = new HashMap<>();
+            scheduledStopStopTimes.put(stopA.getId(), sMap);
+            Map<Id<TransitStopFacility>, StopStopTimeData> map = new HashMap<>();
+            stopStopTimes.put(stopA.getId(), map);
+            /*&& stopB.getStopAreaId()!=null && stopB.getStopAreaId().toString().equals(DRT_STOP_AREA)*/
+            transitSchedule.getFacilities().values().stream().filter(stopB -> stopA != stopB).forEach(stopB -> {
+                double distance = CoordUtils.calcEuclideanDistance(stopA.getCoord(), stopB.getCoord());
+                sMap.put(stopB.getId(), distance / (20.0 / 3.6));
+                map.put(stopB.getId(), new StopStopTimeDataArray(totalTime / timeSlot + 1));
+            });
+        });
         this.inTransitPeople = new HashMap<>(1000);
         this.arrivingVehicles = new HashMap<>(1000);
         this.timeSlot = (double)timeSlot;
     }
 
     private double getStopStopTime(Id<TransitStopFacility> stopOId, Id<TransitStopFacility> stopDId, double time) {
-        StopStopTimeData stopStopTimeData = (StopStopTimeData)((Map)this.stopStopTimes.get(stopOId)).get(stopDId);
-        return stopStopTimeData.getNumData((int)(time / this.timeSlot)) == 0 ? ((Double)((Map)this.scheduledStopStopTimes.get(stopOId)).get(stopDId)).doubleValue() : stopStopTimeData.getStopStopTime((int)(time / this.timeSlot));
+        StopStopTimeData stopStopTimeData = (StopStopTimeData)((Map<?, ?>)this.stopStopTimes.get(stopOId)).get(stopDId);
+        return stopStopTimeData.getNumData((int)(time / this.timeSlot)) == 0 ? (Double) ((Map<?, ?>) this.scheduledStopStopTimes.get(stopOId)).get(stopDId) : stopStopTimeData.getStopStopTime((int)(time / this.timeSlot));
     }
 
     private double getStopStopTimeVariance(Id<TransitStopFacility> stopOId, Id<TransitStopFacility> stopDId, double time) {
-        StopStopTimeData stopStopTimeData = (StopStopTimeData)((Map)this.stopStopTimes.get(stopOId)).get(stopDId);
+        StopStopTimeData stopStopTimeData = (StopStopTimeData)((Map<?, ?>)this.stopStopTimes.get(stopOId)).get(stopDId);
         return stopStopTimeData.getNumData((int)(time / this.timeSlot)) == 0 ? 0.0D : stopStopTimeData.getStopStopTimeVariance((int)(time / this.timeSlot));
     }
 
@@ -111,9 +110,7 @@ public class StopStopTimeCalculatorAV implements PersonEntersVehicleEventHandler
     }
 
     public void reset(int iteration) {
-        for(Map<Id<TransitStopFacility>, StopStopTimeData> map:this.stopStopTimes.values())
-            for(StopStopTimeData stopStopTimeData:map.values())
-                stopStopTimeData.resetStopStopTimes();
+        this.stopStopTimes.values().stream().flatMap(map -> map.values().stream()).forEach(StopStopTimeData::resetStopStopTimes);
         this.inTransitPeople.clear();
         this.arrivingVehicles.clear();
     }

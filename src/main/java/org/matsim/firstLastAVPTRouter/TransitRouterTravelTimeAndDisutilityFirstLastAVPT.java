@@ -34,6 +34,7 @@ import org.matsim.core.router.util.TravelTime;
 import org.matsim.core.utils.geometry.CoordUtils;
 import org.matsim.pt.router.CustomDataManager;
 import org.matsim.pt.router.PreparedTransitSchedule;
+import org.matsim.pt.router.TransitRouterConfig;
 import org.matsim.pt.router.TransitTravelDisutility;
 import org.matsim.vehicles.Vehicle;
 
@@ -64,18 +65,18 @@ public class TransitRouterTravelTimeAndDisutilityFirstLastAVPT implements Travel
 
 
 	public TransitRouterTravelTimeAndDisutilityFirstLastAVPT(TransitRouterParams config, TransitRouterUtilityParams params, TransitRouterNetworkFirstLastAVPT routerNetwork, WaitTime waitTime, WaitTime waitTimeAV, StopStopTime stopStopTime, StopStopTime stopStopTimeAV, TravelTimeCalculatorConfigGroup tTConfigGroup, QSimConfigGroup qSimConfigGroup, PreparedTransitSchedule preparedTransitSchedule) {
-		this(config, params, routerNetwork, waitTime, waitTimeAV, stopStopTime, stopStopTimeAV, tTConfigGroup, qSimConfigGroup.getStartTime(), qSimConfigGroup.getEndTime(), preparedTransitSchedule);
+		this(config, params, routerNetwork, waitTime, waitTimeAV, stopStopTime, stopStopTimeAV, tTConfigGroup, qSimConfigGroup.getStartTime().seconds(), qSimConfigGroup.getEndTime().seconds(), preparedTransitSchedule);
 	}
 	public TransitRouterTravelTimeAndDisutilityFirstLastAVPT(TransitRouterParams config, TransitRouterUtilityParams params, TransitRouterNetworkFirstLastAVPT routerNetwork, WaitTime waitTime, WaitTime waitTimeAV, StopStopTime stopStopTime, StopStopTime stopStopTimeAV, TravelTimeCalculatorConfigGroup tTConfigGroup, double startTime, double endTime, PreparedTransitSchedule preparedTransitSchedule) {
 		this.config = config;
 		this.params = params;
 		timeSlot = tTConfigGroup.getTraveltimeBinSize();
-		numSlots = (int) ((endTime-startTime)/timeSlot);
+		numSlots = (int) ((endTime - startTime)/timeSlot);
 		for(TransitRouterNetworkFirstLastAVPT.TransitRouterNetworkLink link:routerNetwork.getLinks().values())
-			if(link.route!=null) {
+			if(link.route != null) {
 				double[] times = new double[numSlots];
-				for(int slot = 0; slot<numSlots; slot++)
-					times[slot] = stopStopTime.getStopStopTime(link.fromNode.stop.getId(), link.toNode.stop.getId(), startTime+slot*timeSlot);
+				for(int slot = 0; slot < numSlots; slot++)
+					times[slot] = stopStopTime.getStopStopTime(link.fromNode.stop.getId(), link.toNode.stop.getId(), startTime + slot * timeSlot);
 				linkTravelTimes.put(link.getId(), times);
 			}
 			else if(link.toNode.route!=null && link.toNode.line!=null) {
@@ -124,9 +125,7 @@ public class TransitRouterTravelTimeAndDisutilityFirstLastAVPT implements Travel
 	}
 	@Override
 	public double getLinkTravelDisutility(final Link link, final double time, final Person person, final Vehicle vehicle, final CustomDataManager dataManager) {
-		boolean cachedTravelDisutility = false;
-		if(previousLink==link && previousTime==time)
-			cachedTravelDisutility = true;
+		boolean cachedTravelDisutility = previousLink == link && previousTime == time;
 		TransitRouterNetworkFirstLastAVPT.TransitRouterNetworkLink wrapped = (TransitRouterNetworkFirstLastAVPT.TransitRouterNetworkLink) link;
 		int index = time/timeSlot<numSlots ? (int)(time/timeSlot) : (numSlots-1);
 		double length = wrapped.getLength()<3?3:wrapped.getLength();
@@ -188,8 +187,7 @@ public class TransitRouterTravelTimeAndDisutilityFirstLastAVPT implements Travel
 	@Override
 	public double getWalkTravelTime(Person person, Coord coord, Coord toCoord) {
 		double distance = CoordUtils.calcEuclideanDistance(coord, toCoord);
-		double initialTime = distance / config.beelineWalkSpeed;
-		return initialTime;
+		return distance / config.beelineWalkSpeed; /* return initial time */
 	}
 
 }
