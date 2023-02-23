@@ -22,7 +22,6 @@ import org.apache.log4j.Logger;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.Ignore;
 import org.matsim.api.core.v01.population.Population;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.events.EventsUtils;
@@ -38,7 +37,7 @@ import java.net.URL;
  * @author nagel
  *
  */
-public class RunMatsimTest {
+public class RunMatsimWithMaaSRouterTest {
 	
 	@Rule public MatsimTestUtils utils = new MatsimTestUtils() ;
 
@@ -47,13 +46,14 @@ public class RunMatsimTest {
 	public final void test() {
 
 		try {
-			final URL baseUrl = ExamplesUtils.getTestScenarioURL( "equil" );
+			final URL baseUrl = ExamplesUtils.getTestScenarioURL( "TP_Experiment_start" );
+//			final URL baseUrl = "scenarios/TP_Experiment_start";
 			final String fullUrl = IOUtils.extendUrl( baseUrl, "config.xml" ).toString();
 			String [] args = {fullUrl,
 				  "--config:controler.outputDirectory", utils.getOutputDirectory(),
 				  "--config:controler.lastIteration", "1"
 			} ;
-			RunMatsim.main( args ) ;
+			RunMatsimWithMaaSRouter.main( args ) ;
 			{
 				Population expected = PopulationUtils.createPopulation( ConfigUtils.createConfig() ) ;
 				PopulationUtils.readPopulation( expected, utils.getInputDirectory() + "/output_plans.xml.gz" );
